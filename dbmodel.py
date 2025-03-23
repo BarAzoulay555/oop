@@ -2,14 +2,12 @@ import sqlite3
 from stock import Stock  # ייבוא מחלקת Stock
 from bond import Bond    # ייבוא מחלקת Bond
 
-
 class dbmodel:
     def __init__(self):
         print("DB connect")
-        # אתחול החיבור למסד הנתונים
         self.conn = sqlite3.connect('investments.db')
         self.cursor = self.conn.cursor()
-        
+
         # יצירת טבלה אם היא לא קיימת
         self.cursor.execute('''SELECT name FROM sqlite_master WHERE type='table' AND name='investments';''')
         if not self.cursor.fetchone():
@@ -17,11 +15,13 @@ class dbmodel:
             self.conn.commit()
     
     def insert(self, whatsecurity, amount):   
-        # הוספת נייר ערך למסד
-        self.cursor.execute('''INSERT INTO investments (name, base_value, amount) VALUES (?, ?, ?)''', (whatsecurity.name, whatsecurity.base_value, amount))
+        print(f"Inserting {whatsecurity.name} with amount {amount}...")
+        self.cursor.execute('''INSERT INTO investments (name, base_value, amount) VALUES (?, ?, ?)''', 
+                        (whatsecurity.name, whatsecurity.base_value, amount))
         self.conn.commit()
-        print(f"Inserting {whatsecurity.name}...")
-    
+        print(f"Inserted {whatsecurity.name} at {whatsecurity.base_value} with amount {amount}.")
+
+
     def delete(self, identifier):
         """
         מוחק רשומה מהטבלה לפי שם נייר הערך
@@ -40,8 +40,17 @@ class dbmodel:
         """
         self.cursor.execute('SELECT * FROM investments')
         rows = self.cursor.fetchall()
+
+        if not rows:
+            print("No data in DB")  # הדפסת הודעה אם אין נתונים
+        else:
+            print(f"Retrieved {len(rows)} rows.")  # הדפסת כמות השורות שנשלפו
+
         columns = [column[0] for column in self.cursor.description]
         dictanswer = {row[0]: dict(zip(columns, row)) for row in rows}
+
+        # הדפסת הנתונים שנשלפים ממסד הנתונים לצורך בדיקה
+        #print("Data retrieved from DB:", dictanswer)  # הדפסת הנתונים שמתקבלים מ-DB
         return dictanswer
 
     def calculate_portfolio_risk(self):
